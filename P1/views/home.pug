@@ -1,0 +1,117 @@
+doctype html
+html(lang='es')
+  head
+    title Biblioteca de peliculas
+  body
+    .row
+        button(class="btn btn-success" id="session")
+            a(href="/login") Inicar sesión
+    .container
+      .header
+          span.position Descripción: 
+          span.desc
+            | Este es un espacio para realizar la publicación de peliculas relevantes para mi persona, podría ser de ayuda para que otros les motive a verlas y disfrutarlas.
+  .section(class="text-center" id="addpeli")
+            button.btn.btn-primary(type='button' data-bs-toggle='modal' data-bs-target='#exampleModal')
+              | Agregar Pelicula
+.details
+        .section#peliculasAlta
+          
+        .section(class="text-center")
+          .section__title
+            | Universidad de Colima
+          .section__list
+            .section__list-item
+              | Marzo 22, 2022.
+            
+            #exampleModal.modal.fade(tabindex='-1' aria-labelledby='exampleModalLabel' aria-hidden='true')
+              .modal-dialog
+                .modal-content
+                  .modal-header
+                    h5#exampleModalLabel.modal-title Agregar Pelicula
+                    button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+                  .modal-body
+                  p inicia secion para agregar peliculas
+                    form(id="datapeli")
+                      .form-group
+                        label.col-form-label(for='recipient-name') Titulo:
+                        input#recipient-name.form-control(type='text' name="titulo")
+                      .form-group
+                        label.col-form-label(for='message-text') Descripción:
+                        textarea#descrip-text.form-control(name="descripcion")
+                      .form-group
+                        label.col-form-label(for='recipient-name') Fecha:
+                        input#recipient-date.form-control(type='date' name="fecha")
+                  .modal-footer
+                    button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cerrar
+                    button.btn.btn-success(type='button' id="savepeli") Guardar
+script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous")
+script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js")
+script.
+        $(document).ready(function() {
+
+            verify()
+            
+            $.post('/getData', function(data){
+                peliculas = ''
+                $.each( data, function( key, val ) {
+                fecha = data[key]['fecha'].split("T")
+                peliculas += '<div class="section__title">' + data[key]['titulo'] + '</div><div class="section__list"><div class="section__list-item"><div class="left"><div class="name">Descripción</div><div class="addr">' + data[key]['descripcion'] + '</div></div><div class="right"><div class="name">Fecha de estreno</div><div class="desc">' + fecha[0] + '</div></div></div></div><br><br>'
+                });
+                
+                $("#peliculasAlta").append(peliculas)
+            })
+            
+            $( "#session" ).click(function() {
+                txt = $(this).text()
+                if(txt == 'Cerrar sesión'){
+                    $.post( "/off", function( data ) {
+                        verify()
+                    })
+                }else{
+                    $(location).prop('href', '/login')
+                }
+            })
+            
+            $("#savepeli").click(function(e){
+                e.preventDefault()
+                jsonPeli = $("#datapeli").serializeArray()
+                var new_p = ""
+                $.post("/addpelicula", jsonPeli, function(data){
+                    if(data == true){
+                        $("#exampleModal").modal('hide')
+                        $("#recipient-name").val('')
+                        $("#descrip-text").val('')
+                        $("#recipient-date").val('')
+                        
+                        new_p += '<div class="section__title">' + jsonPeli[0]['value'] + '</div><div class="section__list"><div class="section__list-item"><div class="left"><div class="name">Descripción</div><div class="addr">' + jsonPeli[1]['value'] + '</div></div><div class="right"><div class="name">Fecha de estreno</div><div class="desc">' + jsonPeli[2]['value'] + '</div></div></div></div><br><br>'
+                        
+                        $("#peliculasAlta").last().append(new_p);
+                    }
+                })
+            })
+            
+        })
+        
+        function verify(){
+            $.post( "/verify", function( data ) {
+              if(data == false){
+                $("#addpeli").hide()
+                 $("#recipient-name").hide()
+                  $("#descrip-text.form-control").hide()
+                   $("#recipient-date").hide()
+                 descrip-text.form-control
+                $("#session").removeClass("btn-danger")
+                $("#session").addClass("btn-success")
+                $("#session").text("Iniciar sesión")
+              }else{
+                $("#addpeli").show()
+                 $("#recipient-name").show()
+                  $("#descrip-text.form-control").show()
+                   $("#recipient-date").show()
+                $("#session").removeClass("btn-success")
+                $("#session").addClass("btn-danger")
+                $("#session").text("Cerrar sesión")
+                  }
+            })
+        }
